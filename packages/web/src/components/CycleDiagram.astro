@@ -1,92 +1,179 @@
 ---
 /**
- * The MCP cycle as an accessible inline SVG. Pure markup: no script, themes via currentColor + CSS vars.
- * Seven steps around a loop, with the device/host boundary drawn as the one line ciphertext crosses.
+ * The MCP cycle as an interactive sigil ring.
+ * Static SVG carries all content (SEO + no-JS). Progressive enhancement:
+ *  - a spark travels the ring (SMIL animateMotion, no JS)
+ *  - nodes are buttons; click/keyboard selects a step and reveals its detail panel
+ *  - the ring draws itself in when scrolled into view
  */
 const steps = [
-  { id: 'brief', n: 1, title: 'Brief', sub: 'SessionStart hook replays the soul' },
-  { id: 'read', n: 2, title: 'Read', sub: 'harness loads skill, calls soul_state' },
-  { id: 'learn', n: 3, title: 'Learn', sub: 'soul_observe records preferences' },
-  { id: 'gate', n: 4, title: 'Gate', sub: 'scope · trust ladder · schema · seq' },
-  { id: 'witness', n: 5, title: 'Witness', sub: 'seen task completion → XP' },
-  { id: 'sync', n: 6, title: 'Sync', sub: 'encrypt on device, push ciphertext' },
-  { id: 'grow', n: 7, title: 'Grow', sub: 'level-up offers capability, human accepts' },
+  { id: 'brief', n: 1, title: 'Brief', sub: 'SessionStart hook replays the soul', detail: 'The moment a session opens, a hook replays your soul on your own machine and hands the assistant a one-paragraph brief: who you are, your level, open promises, the strongest things it has learned. You have not typed anything yet.' },
+  { id: 'read', n: 2, title: 'Read', sub: 'harness loads skill, calls soul_state', detail: 'The assistant loads the soul-companion rulebook and calls soul_state. It gets the full picture plus the exact list of event types it is allowed to write right now. Observations become standing preferences it follows without reciting.' },
+  { id: 'learn', n: 3, title: 'Learn', sub: 'soul_observe records preferences', detail: 'When you state a lasting preference, pattern, goal, dislike or fact, the assistant records it with soul_observe. Repeats raise confidence. Secrets, moods and anything about app usage are never recorded. Only you can strike a line out.' },
+  { id: 'gate', n: 4, title: 'Gate', sub: 'scope · trust ladder · schema · seq', detail: 'Every write passes four gates on your device: does the token allow writing, does the trust ladder allow this kind, is the event well-formed and free of forbidden inputs, and is it the next line in sequence. A harness cannot reach around any of them.' },
+  { id: 'witness', n: 5, title: 'Witness', sub: 'seen task completion → XP', detail: 'The soul grows only from work the assistant actually saw finish and has been trusted to witness. Tests passed, command succeeded, file exists. Your saying "done" is not a witness. Streaks and time in app can never count.' },
+  { id: 'sync', n: 6, title: 'Sync', sub: 'encrypt on device, push ciphertext', detail: 'New lines are locked with your data key, bound to their soul, device, sequence and key version, and pushed as ciphertext. Other devices pull, unlock, verify and replay. Everyone lands on the same picture and the same fingerprint.' },
+  { id: 'grow', n: 7, title: 'Grow', sub: 'level-up offers capability, human accepts', detail: 'Reaching a level offers a capability. You accept it yourself, never through the assistant. Two failures on an accepted capability demote it. Next session the brief reflects the new ladder, and the loop begins again.' },
 ];
-// positions around an ellipse, starting top-left going clockwise
 const cx = 480, cy = 215, rx = 370, ry = 125;
 const pos = steps.map((s, i) => {
   const a = -Math.PI / 2 + (i / steps.length) * Math.PI * 2;
   return { ...s, x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
 });
+const loopPath = `M ${cx} ${cy - ry} A ${rx} ${ry} 0 1 1 ${cx - 0.01} ${cy - ry} Z`;
 ---
 
-<figure aria-labelledby="cycle-title" role="group">
+<figure class="cycle" aria-labelledby="cycle-title" role="group" data-cycle>
   <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cycle-title cycle-desc">
     <title id="cycle-title">The soulsociety MCP cycle</title>
-    <desc id="cycle-desc">
-      A seven-step loop that runs every session: Brief, Read, Learn, Gate, Witness, Sync, Grow. Steps one to five and seven happen on the user's device where the keys live; step six crosses to the host as ciphertext only, and other devices pull, decrypt and replay to the same state.
-    </desc>
+    <desc id="cycle-desc">A seven-step loop that runs every session: Brief, Read, Learn, Gate, Witness, Sync, Grow. Steps one to five and seven happen on the user's device where the keys live; step six crosses to the host as ciphertext only, and other devices pull, decrypt and replay to the same state.</desc>
     <defs>
       <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="var(--accent, #d4af5a)" stop-opacity="0.9" />
-        <stop offset="1" stop-color="var(--accent-2, #7fd6c6)" stop-opacity="0.7" />
+        <stop offset="0" stop-color="var(--accent, #d4af5a)" stop-opacity="0.95" />
+        <stop offset="1" stop-color="var(--accent-2, #7fd6c6)" stop-opacity="0.8" />
       </linearGradient>
       <radialGradient id="node" cx="0.35" cy="0.3" r="0.8">
         <stop offset="0" stop-color="var(--accent, #d4af5a)" />
         <stop offset="1" stop-color="color-mix(in srgb, var(--accent, #d4af5a) 65%, black)" />
       </radialGradient>
+      <radialGradient id="sparkg">
+        <stop offset="0" stop-color="#fff" />
+        <stop offset="0.4" stop-color="var(--accent-2, #7fd6c6)" />
+        <stop offset="1" stop-color="var(--accent-2, #7fd6c6)" stop-opacity="0" />
+      </radialGradient>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="b" />
+        <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
       </marker>
+      <path id="loop" d={loopPath} />
     </defs>
 
-    <!-- device boundary -->
     <rect x="40" y="30" width="880" height="360" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-dasharray="6 6" />
     <text x="60" y="56" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="Crimson Pro, Georgia, serif">USER'S DEVICE · keys live here · plaintext log, 0600</text>
-
-    <!-- host boundary -->
     <rect x="40" y="415" width="880" height="95" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" />
     <text x="60" y="442" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="Crimson Pro, Georgia, serif">HOST · ciphertext only · append-only · rejects gaps and duplicates · never holds a key</text>
     <text x="60" y="488" font-size="13" fill="currentColor" fill-opacity="0.8" font-family="ui-monospace, monospace">heads · append(events) · since(vector) · snapshots   →   other devices pull → decrypt → replay → same replayHash</text>
 
-    <!-- the loop -->
-    <ellipse cx={cx} cy={cy} rx={rx + 10} ry={ry + 10} fill="none" stroke="url(#ring)" stroke-opacity="0.35" stroke-width="1" stroke-dasharray="2 6" />
-    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="url(#ring)" stroke-width="2.5" />
-    <ellipse cx={cx} cy={cy} rx={rx - 10} ry={ry - 10} fill="none" stroke="url(#ring)" stroke-opacity="0.3" stroke-width="1" />
+    <g class="rings">
+      <ellipse cx={cx} cy={cy} rx={rx + 10} ry={ry + 10} fill="none" stroke="url(#ring)" stroke-opacity="0.35" stroke-width="1" stroke-dasharray="2 6" class="ring-outer" />
+      <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="url(#ring)" stroke-width="2.5" class="ring-main" pathLength="100" />
+      <ellipse cx={cx} cy={cy} rx={rx - 10} ry={ry - 10} fill="none" stroke="url(#ring)" stroke-opacity="0.3" stroke-width="1" class="ring-inner" />
+    </g>
     {pos.map((p, i) => {
-      const next = pos[(i + 1) % pos.length];
-      // arrow along the ellipse: draw a short chord near the midpoint
       const a1 = -Math.PI / 2 + (i / pos.length) * Math.PI * 2 + 0.33;
       const a2 = -Math.PI / 2 + (i / pos.length) * Math.PI * 2 + 0.52;
       const x1 = cx + rx * Math.cos(a1), y1 = cy + ry * Math.sin(a1);
       const x2 = cx + rx * Math.cos(a2), y2 = cy + ry * Math.sin(a2);
-      return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" data-next={next.id} />;
+      return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" class="arrow" />;
     })}
 
-    <!-- nodes -->
+    <g class="spark" filter="url(#glow)">
+      <circle r="7" fill="url(#sparkg)">
+        <animateMotion dur="16s" repeatCount="indefinite" rotate="auto"><mpath href="#loop" /></animateMotion>
+      </circle>
+    </g>
+
     {pos.map((p) => (
-      <g transform={`translate(${p.x} ${p.y})`}>
+      <g class="node" transform={`translate(${p.x} ${p.y})`} tabindex="0" role="button" aria-pressed="false" aria-label={`Step ${p.n}: ${p.title}. ${p.sub}`} data-step={p.id} style={`--i:${p.n}`}>
+        <g class="node-inner">
+        <circle r="40" fill="var(--accent, #d4af5a)" fill-opacity="0" class="halo" />
         <circle r="33" fill="none" stroke="var(--accent, #d4af5a)" stroke-opacity="0.5" stroke-width="1" />
-        <circle r="30" fill="url(#node)" stroke="var(--accent, #d4af5a)" stroke-width="1.5" />
+        <circle r="30" fill="url(#node)" stroke="var(--accent, #d4af5a)" stroke-width="1.5" class="disc" />
         <text y="-4" text-anchor="middle" font-size="11" fill="var(--accent-ink, #15110a)" font-family="Cinzel, Georgia, serif">{p.n}</text>
         <text y="12" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent-ink, #15110a)" font-family="Cinzel, Georgia, serif">{p.title}</text>
         {(() => {
           const side = Math.abs(p.x - cx) > rx * 0.55;
-          const x = side ? (p.x < cx ? 40 : -40) : 0; // side labels sit inside the loop
-          const y = side ? (p.y < cy ? 36 : 4) : p.y > cy ? -42 : 48; // upper side nodes: label below, inside
+          const x = side ? (p.x < cx ? 40 : -40) : 0;
+          const y = side ? (p.y < cy ? 36 : 4) : p.y > cy ? -42 : 48;
           const anchor = side ? (p.x < cx ? 'start' : 'end') : 'middle';
-          return (
-            <text x={x} y={y} text-anchor={anchor} font-size="12" fill="currentColor" fill-opacity="0.8" font-family="Crimson Pro, Georgia, serif">
-              {p.sub}
-            </text>
-          );
+          return <text x={x} y={y} text-anchor={anchor} font-size="12" fill="currentColor" fill-opacity="0.8" font-family="Crimson Pro, Georgia, serif">{p.sub}</text>;
         })()}
+        </g>
       </g>
     ))}
 
-    <!-- sync crosses the boundary -->
-    <line x1={pos[5]!.x} y1={pos[5]!.y + 34} x2={pos[5]!.x} y2="413" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" />
+    <line x1={pos[5]!.x} y1={pos[5]!.y + 34} x2={pos[5]!.x} y2="413" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" class="arrow" />
     <text x={pos[5]!.x + 10} y="405" font-size="12" fill="currentColor" fill-opacity="0.8" font-family="ui-monospace, monospace">encrypt(DK, AAD = soul|device|seq|ver)</text>
   </svg>
-  <figcaption id="cycle-caption">One session, seven steps. Everything but step six stays on the device; step six crosses to the host as ciphertext.</figcaption>
+
+  <div class="cycle-detail" data-cycle-detail aria-live="polite">
+    {steps.map((s) => (
+      <div class="cycle-panel" data-panel={s.id} hidden>
+        <h3><span class="n">{s.n}</span> {s.title}</h3>
+        <p>{s.detail}</p>
+      </div>
+    ))}
+    <p class="cycle-hint" data-cycle-hint>Click or tab to a step to read what happens there.</p>
+  </div>
+  <figcaption>One session, seven steps. Everything but step six stays on the device; step six crosses to the host as ciphertext.</figcaption>
 </figure>
+
+<style>
+  .cycle .node { cursor: pointer; outline: none; }
+  .cycle .node-inner { transition: transform 0.25s ease; transform-box: fill-box; transform-origin: center; }
+  .cycle .node:hover .disc, .cycle .node:focus-visible .disc, .cycle .node[aria-pressed='true'] .disc { stroke-width: 3; }
+  .cycle .node:hover .halo, .cycle .node:focus-visible .halo, .cycle .node[aria-pressed='true'] .halo { fill-opacity: 0.18; }
+  .cycle .node[aria-pressed='true'] .node-inner { transform: scale(1.08); }
+  .cycle .halo { transition: fill-opacity 0.3s ease; }
+  .cycle .ring-main { stroke-dasharray: 100; stroke-dashoffset: 100; }
+  .cycle.in .ring-main { animation: draw 1.8s ease-out forwards; }
+  .cycle .node-inner { opacity: 0; }
+  .cycle.in .node-inner { animation: pop 0.5s ease-out forwards; animation-delay: calc(0.25s * var(--i)); }
+  .cycle .ring-outer { animation: spin 90s linear infinite; transform-box: fill-box; transform-origin: center; }
+  .cycle .spark { opacity: 0; }
+  .cycle.in .spark { animation: fade 1s 2s forwards; }
+  .cycle-detail { margin-top: 0.75rem; min-height: 5.5rem; }
+  .cycle-panel { background: var(--card); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.8rem 1rem; animation: rise 0.35s ease-out; }
+  .cycle-panel h3 { margin: 0 0 0.3rem; display: flex; align-items: center; gap: 0.5rem; }
+  .cycle-panel .n { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 0.85rem; }
+  .cycle-panel p { margin: 0; }
+  .cycle-hint { color: var(--muted); font-style: italic; margin: 0.4rem 0 0; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fade { to { opacity: 1; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .cycle .ring-main { stroke-dashoffset: 0; animation: none; }
+    .cycle .node-inner { opacity: 1; animation: none !important; }
+    .cycle .ring-outer, .cycle-panel { animation: none; }
+    .cycle .spark { display: none; }
+  }
+</style>
+
+<script>
+  const fig = document.querySelector<HTMLElement>('[data-cycle]');
+  if (fig) {
+    const nodes = Array.from(fig.querySelectorAll<SVGGElement>('.node'));
+    const panels = Array.from(fig.querySelectorAll<HTMLElement>('[data-panel]'));
+    const hint = fig.querySelector<HTMLElement>('[data-cycle-hint]');
+    const select = (id: string | null) => {
+      nodes.forEach((n) => n.setAttribute('aria-pressed', String(n.dataset.step === id)));
+      panels.forEach((p) => (p.hidden = p.dataset.panel !== id));
+      if (hint) hint.hidden = id !== null;
+    };
+    nodes.forEach((n) => {
+      n.addEventListener('click', () => select(n.getAttribute('aria-pressed') === 'true' ? null : (n.dataset.step ?? null)));
+      n.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          n.dispatchEvent(new Event('click'));
+        }
+      });
+    });
+    const io = new IntersectionObserver(
+      (es) =>
+        es.forEach((e) => {
+          if (e.isIntersecting) {
+            fig.classList.add('in');
+            io.disconnect();
+          }
+        }),
+      { threshold: 0.25 },
+    );
+    io.observe(fig);
+  }
+</script>

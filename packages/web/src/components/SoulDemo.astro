@@ -1,0 +1,200 @@
+---
+/**
+ * "Try the cycle": a client-side simulation of a soul and its trust ladder.
+ * The same rules the real soul-mcp enforces, in miniature. Nothing is sent anywhere.
+ */
+---
+
+<section class="demo" aria-labelledby="demo-title" data-demo>
+  <h2 id="demo-title">Try the cycle</h2>
+  <p class="lead" style="font-size:1.05rem">A toy soul, in your browser. Play the assistant and the human and watch the gates work. Nothing leaves this page.</p>
+
+  <div class="demo-grid">
+    <div class="demo-panel">
+      <div class="demo-head">
+        <div class="sigil" aria-hidden="true"><span data-level-badge>1</span></div>
+        <div>
+          <div class="demo-name">a new soul</div>
+          <div class="muted">Level <strong data-level>1</strong> · <strong data-xp>0</strong> xp · next level at <span data-next>100</span></div>
+        </div>
+      </div>
+      <div class="bar" role="progressbar" aria-label="progress to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-bar><span data-bar-fill></span></div>
+
+      <h3>Trust ladder</h3>
+      <ul class="ladder" data-ladder>
+        <li data-cap="witness_tasks"><span class="dot"></span> witness tasks <em>not offered</em></li>
+        <li data-cap="approve_drafts"><span class="dot"></span> approve drafts <em>not offered</em></li>
+        <li data-cap="manage_commitments"><span class="dot"></span> manage commitments <em>not offered</em></li>
+      </ul>
+
+      <h3>Observations</h3>
+      <ul class="obs" data-obs><li class="muted">none yet</li></ul>
+    </div>
+
+    <div class="demo-panel">
+      <h3>As the assistant</h3>
+      <div class="btns">
+        <button type="button" data-act="observe">Record a preference</button>
+        <button type="button" data-act="task">Witness a task</button>
+        <button type="button" data-act="draft">Approve a draft</button>
+        <button type="button" data-act="streak">Log a 7-day streak</button>
+      </div>
+      <h3>As the human</h3>
+      <div class="btns">
+        <button type="button" data-act="offer">Offer "witness tasks"</button>
+        <button type="button" data-act="accept">Accept it</button>
+        <button type="button" data-act="fail">Report a failure</button>
+        <button type="button" data-act="reset" class="ghost">Reset</button>
+      </div>
+      <h3>Event log</h3>
+      <ol class="log" data-log aria-live="polite"></ol>
+    </div>
+  </div>
+</section>
+
+<style>
+  .demo-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
+  .demo-panel { background: var(--card); border: 1px solid var(--line); border-radius: 0.6rem; padding: 1rem 1.1rem; box-shadow: inset 0 0 0 1px var(--bg), inset 0 0 0 2px color-mix(in srgb, var(--line) 60%, transparent); }
+  .demo-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.6rem; }
+  .demo-name { font-family: var(--display); font-size: 1.1rem; }
+  .sigil { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 2px solid var(--accent); display: grid; place-items: center; font-family: var(--display); font-weight: 700; color: var(--accent); box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--line), 0 0 24px var(--glow); position: relative; }
+  .sigil.pulse { animation: pulse 0.7s ease-out; }
+  .bar { height: 0.6rem; border-radius: 1rem; background: var(--code); border: 1px solid var(--line); overflow: hidden; margin: 0.4rem 0 0.8rem; }
+  .bar span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .ladder, .obs, .log { list-style: none; padding: 0; margin: 0; }
+  .ladder li { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+  .ladder em { color: var(--muted); font-style: italic; margin-left: auto; font-size: 0.9rem; }
+  .dot { width: 0.7rem; height: 0.7rem; border-radius: 50%; background: var(--line); transition: background 0.3s, box-shadow 0.3s; }
+  .ladder li[data-state='offered'] .dot { background: var(--accent-2); }
+  .ladder li[data-state='accepted'] .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .ladder li[data-state='revoked'] .dot { background: #b5483f; }
+  .obs li { padding: 0.2rem 0; animation: rise 0.35s ease-out; }
+  .obs .conf { color: var(--muted); font-size: 0.85rem; }
+  .btns { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .btns button { font: inherit; font-family: var(--display); font-size: 0.8rem; letter-spacing: 0.03em; padding: 0.5rem 0.8rem; border-radius: 0.4rem; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s; }
+  .btns button:hover { background: var(--accent); color: var(--accent-ink); transform: translateY(-1px); }
+  .btns button:active { transform: translateY(0); }
+  .btns button.ghost { border-color: var(--line); color: var(--muted); }
+  .log { max-height: 15rem; overflow-y: auto; font-family: var(--mono); font-size: 0.8rem; border: 1px solid var(--line); border-radius: 0.4rem; padding: 0.5rem 0.7rem; background: var(--code); }
+  .log li { padding: 0.15rem 0; animation: rise 0.3s ease-out; border-bottom: 1px dashed color-mix(in srgb, var(--line) 50%, transparent); }
+  .log li.ok { color: var(--accent-2); }
+  .log li.no { color: #d98a82; }
+  .log li.human { color: var(--accent); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--line), 0 0 0 var(--accent); } 100% { box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px var(--line), 0 0 0 28px transparent; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .sigil.pulse, .obs li, .log li { animation: none; } .bar span { transition: none; } }
+</style>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-demo]');
+  if (root) {
+    const LEVELS = [0, 100, 300, 700, 1500];
+    const CAP_EVENTS: Record<string, string[]> = { witness_tasks: ['task.completed'], approve_drafts: ['draft.approved'], manage_commitments: ['commitment.kept'] };
+    const PREFS = ['prefers answers under 200 words', 'does deep work before 11:00', 'dislikes being reminded twice', 'wants to ship the beta this quarter', 'works in a TypeScript monorepo'];
+    type Trust = { status: 'offered' | 'accepted' | 'revoked'; failures: number };
+    let state = { xp: 0, seq: 0, trust: {} as Record<string, Trust>, obs: new Map<string, number>(), prefIdx: 0 };
+
+    const $ = (sel: string) => root.querySelector<HTMLElement>(sel)!;
+    const log = $('[data-log]');
+    const levelFor = (xp: number) => LEVELS.reduce((l, t, i) => (xp >= t ? i + 1 : l), 1);
+    const allowed = () => {
+      const a = new Set(['note', 'commitment.made', 'observation']);
+      for (const [cap, t] of Object.entries(state.trust)) if (t.status === 'accepted') CAP_EVENTS[cap]!.forEach((e) => a.add(e));
+      return a;
+    };
+    const line = (text: string, cls = '') => {
+      const li = document.createElement('li');
+      li.className = cls;
+      li.textContent = `${String(++state.seq).padStart(3, '0')}  ${text}`;
+      log.prepend(li);
+      while (log.children.length > 40) log.lastElementChild?.remove();
+    };
+    const render = () => {
+      const lvl = levelFor(state.xp);
+      const prevLvl = Number($('[data-level]').textContent);
+      $('[data-level]').textContent = String(lvl);
+      $('[data-level-badge]').textContent = String(lvl);
+      $('[data-xp]').textContent = String(state.xp);
+      const next = LEVELS[lvl] ?? null;
+      $('[data-next]').textContent = next === null ? 'max' : String(next);
+      const base = LEVELS[lvl - 1] ?? 0;
+      const pct = next === null ? 100 : Math.round(((state.xp - base) / (next - base)) * 100);
+      ($('[data-bar-fill]') as HTMLElement).style.width = pct + '%';
+      $('[data-bar]').setAttribute('aria-valuenow', String(pct));
+      if (lvl > prevLvl) {
+        $('.sigil').classList.remove('pulse'); void $('.sigil').offsetWidth; $('.sigil').classList.add('pulse');
+        line(`level ${lvl} reached — the soul may now offer a capability`, 'human');
+      }
+      root.querySelectorAll<HTMLElement>('[data-cap]').forEach((li) => {
+        const t = state.trust[li.dataset.cap!];
+        li.dataset.state = t?.status ?? '';
+        li.querySelector('em')!.textContent = t ? (t.status === 'revoked' ? 'revoked after 2 failures' : t.status + (t.failures ? ` · ${t.failures} failure` : '')) : 'not offered';
+      });
+      const obs = $('[data-obs]');
+      obs.innerHTML = '';
+      if (state.obs.size === 0) obs.innerHTML = '<li class="muted">none yet</li>';
+      for (const [text, n] of state.obs) {
+        const li = document.createElement('li');
+        li.innerHTML = `${text} <span class="conf">× ${n} · confidence ${Math.min(0.95, 0.5 + 0.15 * (n - 1)).toFixed(2)}</span>`;
+        obs.appendChild(li);
+      }
+    };
+    const tryAppend = (type: string, label: string) => {
+      if (!allowed().has(type)) {
+        line(`REFUSED ${type}: not permitted at the current trust level. Allowed: ${[...allowed()].join(', ')}`, 'no');
+        return false;
+      }
+      line(`append ${type} ${label}`, 'ok');
+      return true;
+    };
+    const actions: Record<string, () => void> = {
+      observe() {
+        const text = PREFS[state.prefIdx % PREFS.length]!;
+        state.prefIdx += Math.random() < 0.5 ? 0 : 1;
+        state.obs.set(text, (state.obs.get(text) ?? 0) + 1);
+        line(`append observation "${text}"${state.obs.get(text)! > 1 ? ' (repeat → confidence up)' : ''}`, 'ok');
+      },
+      task() {
+        if (tryAppend('task.completed', '{witnessed:true} +10 xp')) state.xp += 10;
+      },
+      draft() {
+        if (tryAppend('draft.approved', '+15 xp')) state.xp += 15;
+      },
+      streak() {
+        line('REFUSED: "streak" is a forbidden input. The schema rejects engagement data before it can touch the state.', 'no');
+      },
+      offer() {
+        if (state.trust['witness_tasks']?.status === 'accepted') return line('witness_tasks is already accepted', 'human');
+        if (state.trust['witness_tasks']?.status === 'revoked') return line('witness_tasks was revoked; re-offering it after a level-up is the human\'s call — resetting failures', 'human'), (state.trust['witness_tasks'] = { status: 'offered', failures: 0 });
+        state.trust['witness_tasks'] = { status: 'offered', failures: 0 };
+        line('human: trust.offered witness_tasks (via CLI, outside the harness)', 'human');
+      },
+      accept() {
+        const t = state.trust['witness_tasks'];
+        if (!t || t.status !== 'offered') return line('nothing offered to accept', 'human');
+        t.status = 'accepted';
+        line('human: trust.accepted witness_tasks — task.completed is now allowed', 'human');
+      },
+      fail() {
+        const t = state.trust['witness_tasks'];
+        if (!t || t.status !== 'accepted') return line('no accepted capability to fail', 'human');
+        t.failures += 1;
+        line(`human: trust.failed witness_tasks (${t.failures}/2)`, 'human');
+        if (t.failures >= 2) { t.status = 'revoked'; line('witness_tasks REVOKED after two failures — back to approval-required', 'no'); }
+      },
+      reset() {
+        state = { xp: 0, seq: 0, trust: {}, obs: new Map(), prefIdx: 0 };
+        log.innerHTML = '';
+        line('soul.created', 'ok');
+      },
+    };
+    root.addEventListener('click', (e) => {
+      const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-act]');
+      if (!b) return;
+      actions[b.dataset.act!]?.();
+      render();
+    });
+    actions.reset!();
+    render();
+  }
+</script>
