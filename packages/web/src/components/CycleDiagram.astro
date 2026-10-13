@@ -27,6 +27,14 @@ const pos = steps.map((s, i) => {
       A seven-step loop that runs every session: Brief, Read, Learn, Gate, Witness, Sync, Grow. Steps one to five and seven happen on the user's device where the keys live; step six crosses to the host as ciphertext only, and other devices pull, decrypt and replay to the same state.
     </desc>
     <defs>
+      <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="var(--accent, #d4af5a)" stop-opacity="0.9" />
+        <stop offset="1" stop-color="var(--accent-2, #7fd6c6)" stop-opacity="0.7" />
+      </linearGradient>
+      <radialGradient id="node" cx="0.35" cy="0.3" r="0.8">
+        <stop offset="0" stop-color="var(--accent, #d4af5a)" />
+        <stop offset="1" stop-color="color-mix(in srgb, var(--accent, #d4af5a) 65%, black)" />
+      </radialGradient>
       <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
       </marker>
@@ -34,15 +42,17 @@ const pos = steps.map((s, i) => {
 
     <!-- device boundary -->
     <rect x="40" y="30" width="880" height="360" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-dasharray="6 6" />
-    <text x="60" y="56" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="system-ui, sans-serif">USER'S DEVICE · keys live here · plaintext log, 0600</text>
+    <text x="60" y="56" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="Crimson Pro, Georgia, serif">USER'S DEVICE · keys live here · plaintext log, 0600</text>
 
     <!-- host boundary -->
     <rect x="40" y="415" width="880" height="95" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" />
-    <text x="60" y="442" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="system-ui, sans-serif">HOST · ciphertext only · append-only · rejects gaps and duplicates · never holds a key</text>
+    <text x="60" y="442" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="Crimson Pro, Georgia, serif">HOST · ciphertext only · append-only · rejects gaps and duplicates · never holds a key</text>
     <text x="60" y="488" font-size="13" fill="currentColor" fill-opacity="0.8" font-family="ui-monospace, monospace">heads · append(events) · since(vector) · snapshots   →   other devices pull → decrypt → replay → same replayHash</text>
 
     <!-- the loop -->
-    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="2" />
+    <ellipse cx={cx} cy={cy} rx={rx + 10} ry={ry + 10} fill="none" stroke="url(#ring)" stroke-opacity="0.35" stroke-width="1" stroke-dasharray="2 6" />
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="url(#ring)" stroke-width="2.5" />
+    <ellipse cx={cx} cy={cy} rx={rx - 10} ry={ry - 10} fill="none" stroke="url(#ring)" stroke-opacity="0.3" stroke-width="1" />
     {pos.map((p, i) => {
       const next = pos[(i + 1) % pos.length];
       // arrow along the ellipse: draw a short chord near the midpoint
@@ -56,16 +66,17 @@ const pos = steps.map((s, i) => {
     <!-- nodes -->
     {pos.map((p) => (
       <g transform={`translate(${p.x} ${p.y})`}>
-        <circle r="30" fill="var(--accent, #1f6f5f)" />
-        <text y="-4" text-anchor="middle" font-size="12" fill="var(--accent-ink, #fff)" font-family="system-ui, sans-serif">{p.n}</text>
-        <text y="12" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent-ink, #fff)" font-family="system-ui, sans-serif">{p.title}</text>
+        <circle r="33" fill="none" stroke="var(--accent, #d4af5a)" stroke-opacity="0.5" stroke-width="1" />
+        <circle r="30" fill="url(#node)" stroke="var(--accent, #d4af5a)" stroke-width="1.5" />
+        <text y="-4" text-anchor="middle" font-size="11" fill="var(--accent-ink, #15110a)" font-family="Cinzel, Georgia, serif">{p.n}</text>
+        <text y="12" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent-ink, #15110a)" font-family="Cinzel, Georgia, serif">{p.title}</text>
         {(() => {
           const side = Math.abs(p.x - cx) > rx * 0.55;
           const x = side ? (p.x < cx ? 40 : -40) : 0; // side labels sit inside the loop
           const y = side ? (p.y < cy ? 36 : 4) : p.y > cy ? -42 : 48; // upper side nodes: label below, inside
           const anchor = side ? (p.x < cx ? 'start' : 'end') : 'middle';
           return (
-            <text x={x} y={y} text-anchor={anchor} font-size="12" fill="currentColor" fill-opacity="0.8" font-family="system-ui, sans-serif">
+            <text x={x} y={y} text-anchor={anchor} font-size="12" fill="currentColor" fill-opacity="0.8" font-family="Crimson Pro, Georgia, serif">
               {p.sub}
             </text>
           );
