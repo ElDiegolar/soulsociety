@@ -1,0 +1,29 @@
+{
+  "name": "soulsociety",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -ws --if-present",
+    "test": "npm run build -w @soulsociety/core && npm run test -w @soulsociety/core && npm run test -w @soulsociety/gateway",
+    "test:integration": "SOUL_PG_URL=${SOUL_PG_URL:-postgres://postgres:postgres@127.0.0.1:54329/postgres} npm run test:integration -w @soulsociety/core",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.10.0",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^3.0.0"
+  }
+}

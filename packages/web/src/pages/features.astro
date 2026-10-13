@@ -1,0 +1,157 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'Everything it does';
+const description =
+  'A complete breakdown of soulsociety functionality: the soul record, devices and keys, the command-line tool, the MCP server and its tools, the trust ladder, the host, the gateway, sync and replay, snapshots, harness tokens, demo souls, and the Claude Code integration.';
+
+type Row = [string, string, string];
+const sections: { id: string; title: string; plain: string; rows: Row[] }[] = [
+  {
+    id: 'soul',
+    title: 'The soul itself',
+    plain: 'A notebook that only grows. Every line is dated, signed by the device that wrote it, and numbered so nothing can be slipped in or taken out.',
+    rows: [
+      ['Append-only event log', 'One file per device, one line per event, each with a sequence number. Nothing is ever edited or deleted.', 'JSONL, fsync per append, crash-truncated last line recovered on open'],
+      ['Deterministic replay', 'The current picture of you is never stored. It is recalculated from the log, identically on every device.', 'Order by (timestamp, device, seq); reducers are pure; a chained hash fingerprints the whole history'],
+      ['Name, level and XP', 'A level that rises with finished work. Ten points per witnessed task, fifteen per approved draft.', 'Thresholds 0 / 100 / 300 / 700 / 1500; levels are derived, never written'],
+      ['Observations', 'Things the assistant has learned about you: preferences, patterns, facts, goals, dislikes, each with a confidence score.', 'Dedup by text, confidence rises on repeats, capped at 200, weakest dropped first, retraction is human-only'],
+      ['Commitments', 'Promises you made, with a due date, and whether they were kept or broken.', 'commitment.made / kept / broken events; status transitions only from open'],
+      ['Trust ladder', 'Which permissions the assistant has been offered, accepted, or lost.', 'trust.offered / accepted / failed; two failures demote to revoked'],
+      ['Forbidden inputs', 'Anything about how much you use the app is refused before it can be written.', 'Schema rejects engagement, sessionMinutes, streak, opens, timeInApp, appOpens'],
+      ['Versioned schema', 'Old entries stay readable forever, even as new kinds are added.', 'Every event carries v; unknown types are counted and ignored by replay'],
+    ],
+  },
+  {
+    id: 'keys',
+    title: 'Keys, devices and recovery',
+    plain: 'Your notebook is locked with a key only your devices hold. Adding a device is a one-time approval; losing one is a one-command revoke.',
+    rows: [
+      ['Owner passphrase', 'The master secret. Never stored, never sent.', 'Argon2id (256 MiB, 3 passes) derives the root key; NFKC-normalised'],
+      ['Data key', 'The key that locks every page.', '32 random bytes, versioned; XChaCha20-Poly1305 with AAD binding soul, device, seq and key version'],
+      ['Device keypair', 'Each phone or laptop has its own key, so the data key can be handed to it securely.', 'X25519; data key delivered as a libsodium sealed box; private key in a 0600 passphrase-encrypted file'],
+      ['Recovery code', 'A 26-character code shown once at creation. Gets you back in if you forget the passphrase.', 'Crockford base32, lookalike-tolerant, wraps a second copy of the data key'],
+      ['Enrol and approve', 'A new device asks to join; an existing device, or you with the passphrase or recovery code, says yes.', 'Pending record → sealed data key per version → activate'],
+      ['Revoke and rotate', 'Remove a lost device. From then on it cannot read anything new.', 'New data key version, re-sealed to survivors, history untouched, key.rotated event recorded'],
+    ],
+  },
+  {
+    id: 'cli',
+    title: 'The command-line tool: soul-sync',
+    plain: 'The owner\'s controls. Everything that creates, approves, revokes or grants happens here, never through an assistant.',
+    rows: [
+      ['config', 'Choose where the locked copy is stored: a local file or Supabase.', '--backend file|supabase, --supabase-url, --supabase-key, --data-dir'],
+      ['create', 'Make a new soul on this device. Prints the recovery code once.', '--name, --owner, --label; passphrases via prompt or env'],
+      ['enrol / approve / activate', 'Add another device in three steps.', 'approve from an active device, or --owner / --recovery'],
+      ['revoke', 'Remove a device and rotate the key.', 'Needs the owner passphrase; optional new recovery wrap'],
+      ['devices', 'List devices and their status.', 'pending / active / revoked'],
+      ['append', 'Write any event by hand, including offering and accepting trust.', 'append <type> <json>; this is how capabilities are granted'],
+      ['sync / state / snapshot', 'Push and pull, print the current picture, upload an encrypted checkpoint.', 'state --sync; snapshot carries the replay hash'],
+      ['grant / grants', 'Make or revoke a token for an assistant, with limited permissions and an expiry.', 'Scopes: events:read, events:append, state:read, snapshots:read, snapshots:write; only the hash is stored'],
+      ['Non-interactive use', 'Scripts can supply secrets without typing.', 'SOULSOCIETY_DEVICE_PASSPHRASE, SOULSOCIETY_OWNER_PASSPHRASE, SOULSOCIETY_RECOVERY_CODE'],
+    ],
+  },
+  {
+    id: 'mcp',
+    title: 'The assistant connection: soul-mcp',
+    plain: 'The door the assistant comes through. It is on your computer, the key stays on your computer, and the door only opens as far as the trust ladder says.',
+    rows: [
+      ['soul_state', 'Read the current picture, including exactly what the assistant is allowed to write right now.', 'Returns state plus allowedAppendTypes; optional sync first'],
+      ['soul_history', 'Read past events.', 'Replay order, type-prefix filter, limit'],
+      ['soul_observe', 'Write down something learned about you.', 'kind, text, confidence, source; always permitted'],
+      ['soul_append', 'Write an event, if the ladder allows that kind.', 'Scope gate → trust gate → schema → append → push'],
+      ['soul_request_capability', 'Ask you, once, for a permission it lacks.', 'Recorded as a note; the human answers via CLI'],
+      ['soul_sync / soul_snapshot', 'Sync, and upload a verifiable checkpoint.', 'Serialised so parallel tool calls never race'],
+      ['Server instructions', 'The server tells any assistant to read the soul first and never ask for keys.', 'MCP instructions field in initialize'],
+      ['Grant enforcement', 'If started with a token, the server honours only that token\'s scopes.', 'SOULSOCIETY_GRANT; invalid, expired or revoked tokens refuse to start'],
+    ],
+  },
+  {
+    id: 'harness',
+    title: 'Claude Code integration',
+    plain: 'Three small pieces make the assistant behave: a rulebook, a start-of-session briefing, and the connection above.',
+    rows: [
+      ['soul-companion skill', 'The rulebook: read first, follow preferences, learn honestly, never fake a finished task, never ask for keys.', 'skills/soul-companion/SKILL.md, installed to ~/.claude/skills'],
+      ['Session-start brief', 'A one-paragraph summary of your soul is in the assistant\'s context before you type.', 'SessionStart hook runs scripts/soul-brief.sh, emits additionalContext'],
+      ['One command to connect', 'Register the server once.', 'claude mcp add soul -e SOULSOCIETY_HOME=… -e SOULSOCIETY_DEVICE_PASSPHRASE=… -- node packages/mcp/dist/main.js'],
+    ],
+  },
+  {
+    id: 'host',
+    title: 'The host: where locked pages are kept',
+    plain: 'A storage service that keeps copies so your devices stay in step. It only ever holds locked pages and the rule "next line, or nothing".',
+    rows: [
+      ['File backend', 'A single local file. No account, no server. Two devices on one machine can share it.', 'FileHostStore with an advisory lock; used by tests and demos'],
+      ['Supabase backend', 'A hosted Postgres with per-user access rules.', 'Row-level security on every table; passkey or magic-link auth'],
+      ['Append-only enforcement', 'Even the host\'s own operators cannot edit or delete an event.', 'Trigger forbids update/delete; writes only via events_append()'],
+      ['Gap and duplicate rejection', 'The host refuses any line that is not exactly the next one, and refuses the whole batch if one is wrong.', 'events_append locks per device, checks seq = head + 1, atomic'],
+      ['Immutable device records', 'A device\'s key cannot be swapped and a revoked device cannot be un-revoked.', 'devices_guard trigger'],
+      ['Realtime', 'Other devices learn about new lines within seconds.', 'Supabase Realtime on the events table, ciphertext only'],
+      ['Tested on real Postgres', 'The rules above are proven, not assumed.', '13 integration tests apply the migration and check every policy and RPC'],
+    ],
+  },
+  {
+    id: 'gateway',
+    title: 'The gateway: remote assistants',
+    plain: 'For an assistant that runs somewhere else. It is treated as just another device, and the gateway in the middle only passes locked pages.',
+    rows: [
+      ['Zero-knowledge relay', 'Forwards ciphertext between a remote device and the host. Never holds a key.', 'Hono app, runs on Node or Cloudflare Workers'],
+      ['Token auth', 'Every request needs a valid harness token for that exact soul.', 'Missing or bad → 401; wrong soul or scope → 403'],
+      ['Routes', 'Heads, events, devices, snapshots. Nothing that creates, approves, revokes or grants.', 'GET/POST under /v1/souls/:soulId/…; owner operations stay on the owner\'s path'],
+      ['Limits', 'Per-token rate limit and a request size cap.', '600 requests per minute, 1 MiB body'],
+      ['Custodial sessions (opt-in)', 'For thin clients only: a trusted device lends the gateway a key for up to a day, and the product says so plainly.', 'Session-sealed data key, in memory, 24 h cap; TEE as the upgrade path'],
+      ['HttpStore', 'The client side of the gateway, interchangeable with the file and Supabase stores.', 'Same Store interface; error codes mapped back'],
+    ],
+  },
+  {
+    id: 'sync',
+    title: 'Sync, replay and snapshots',
+    plain: 'Push what is new, pull what others wrote, recalculate. Every device ends up with the same picture and the same fingerprint.',
+    rows: [
+      ['Push', 'Encrypt pending lines and send them.', 'Only lines after the host\'s head for this device; serialised'],
+      ['Pull', 'Fetch other devices\' lines, unlock, verify, store.', 'Per-device since-vector; AAD verified; peer logs appended without gaps'],
+      ['Replay hash', 'A fingerprint of the entire history, identical on every device.', 'Chained BLAKE2b over canonical entries'],
+      ['Snapshots', 'An encrypted checkpoint for fast starts, never trusted blindly.', 'Carries the replay hash; verified against a local replay or discarded'],
+      ['Offline first', 'Works with no connection; sync when you have one.', 'Local log is the source of truth; host is a relay'],
+    ],
+  },
+  {
+    id: 'demo',
+    title: 'Demo souls',
+    plain: 'Three ready-made notebooks so you can see it working in a minute.',
+    rows: [
+      ['atlas', 'A seasoned companion: level 2, trusted to witness tasks, five things learned, one promise outstanding.', 'scripts/seed-demo.sh'],
+      ['sprout', 'Brand new. Nothing learned yet, one promise to keep.', ''],
+      ['ember', 'A rougher history: a broken promise, a permission lost after two mistakes, and a revoked device.', 'Includes a key rotation'],
+    ],
+  },
+];
+---
+
+<Base title={title} description={description} path="/features" ogType="article">
+  <h1>Everything it does</h1>
+  <p class="lead">The complete breakdown. Each section starts with a plain-English summary, then lists every function with what it means for you and, in the right-hand column, how it is actually done.</p>
+
+  <nav aria-label="On this page">
+    <ul style="padding-left: 1.2rem">
+      {sections.map((s) => <li><a href={`#${s.id}`}>{s.title}</a></li>)}
+    </ul>
+  </nav>
+
+  {sections.map((s) => (
+    <section id={s.id}>
+      <h2>{s.title}</h2>
+      <p class="lead" style="font-size:1.05rem">{s.plain}</p>
+      <table class="stack">
+        <thead><tr><th style="width:22%">Function</th><th>What it means for you</th><th style="width:34%">How it works</th></tr></thead>
+        <tbody>
+          {s.rows.map(([f, you, how]) => (
+            <tr><td data-label="Function"><strong>{f}</strong></td><td data-label="What it means for you">{you}</td><td data-label="How it works" class="muted"><code style="background:none;padding:0">{how}</code></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  ))}
+
+  <p><a class="cta" href="/docs">Set it up</a> <a class="cta secondary" href="/glossary" style="margin-left:0.5rem">Glossary</a></p>
+</Base>

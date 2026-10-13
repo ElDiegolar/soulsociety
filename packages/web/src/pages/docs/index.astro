@@ -1,0 +1,84 @@
+---
+import Base from '../../layouts/Base.astro';
+
+const title = 'Docs: quickstart';
+const description =
+  'Install soulsociety, create a soul, enrol a second device, mint a harness token and connect Claude Code over MCP. Commands for the file backend and for Supabase.';
+---
+
+<Base title={title} description={description} path="/docs" ogType="article">
+  <h1>Quickstart</h1>
+  <p class="lead">Node 22, one repository, no account needed for the file backend.</p>
+
+  <h2>Install</h2>
+<pre><code>git clone https://github.com/ElDiegolar/soulsociety
+cd soulsociety && npm install && npm run build</code></pre>
+
+  <h2>Create a soul</h2>
+<pre><code>export SOULSOCIETY_HOME=~/.soulsociety
+node packages/cli/dist/main.js config --backend file
+node packages/cli/dist/main.js create --name kai --label laptop</code></pre>
+  <p>You will be asked for an owner passphrase, which is never stored, and a device passphrase, which protects this device's key file. The command prints a recovery code once. Write it down. If you lose both the passphrase and the recovery code, the soul is ciphertext forever.</p>
+
+  <h2>Enrol a second device</h2>
+  <p>On the second machine, point the CLI at the same host and enrol. Then approve from the first device, or with the owner passphrase or recovery code, and activate.</p>
+<pre><code># second device
+node packages/cli/dist/main.js enrol --soul &lt;soul-id&gt; --label desktop
+# first device (or anywhere with the owner passphrase)
+node packages/cli/dist/main.js approve &lt;device-id&gt;
+# second device
+node packages/cli/dist/main.js activate
+node packages/cli/dist/main.js sync</code></pre>
+
+  <h2>Connect a harness</h2>
+<pre><code>node packages/cli/dist/main.js grant claude-code      # prints a token once
+claude mcp add soul \
+  -e SOULSOCIETY_HOME=$HOME/.soulsociety \
+  -e SOULSOCIETY_DEVICE_PASSPHRASE=… \
+  -- node /path/to/soulsociety/packages/mcp/dist/main.js
+cp -r skills/soul-companion ~/.claude/skills/</code></pre>
+  <p>Add the session-start brief so the soul is in context before the first prompt. In <code>~/.claude/settings.json</code>:</p>
+<pre is:raw><code>{"hooks": {"SessionStart": [{"hooks": [{"type": "command",
+  "command": "SOULSOCIETY_HOME=$HOME/.soulsociety SOULSOCIETY_DEVICE_PASSPHRASE=… bash /path/to/soulsociety/scripts/soul-brief.sh"}]}]}}</code></pre>
+
+  <h2>MCP tools</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tool</th><th>Scope</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>soul_state</code></td><td>state:read</td><td>Derived state plus <code>allowedAppendTypes</code></td></tr>
+      <tr><td><code>soul_history</code></td><td>events:read</td><td>Events in replay order, filterable</td></tr>
+      <tr><td><code>soul_observe</code></td><td>events:append</td><td>Record a preference, pattern, fact, goal or dislike</td></tr>
+      <tr><td><code>soul_append</code></td><td>events:append</td><td>Append any event type the trust ladder allows</td></tr>
+      <tr><td><code>soul_request_capability</code></td><td>events:append</td><td>Ask the human for a capability, once</td></tr>
+      <tr><td><code>soul_sync</code></td><td>events:read</td><td>Push and pull</td></tr>
+      <tr><td><code>soul_snapshot</code></td><td>snapshots:write</td><td>Upload a verifiable encrypted snapshot</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Trust ladder</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Capability</th><th>Unlocks for a harness</th></tr></thead>
+    <tbody>
+      <tr><td>always</td><td><code>note</code>, <code>commitment.made</code>, <code>observation</code></td></tr>
+      <tr><td><code>witness_tasks</code></td><td><code>task.completed</code></td></tr>
+      <tr><td><code>approve_drafts</code></td><td><code>draft.approved</code></td></tr>
+      <tr><td><code>manage_commitments</code></td><td><code>commitment.kept</code>, <code>commitment.broken</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>Offer and accept from the CLI, never from a harness:</p>
+<pre is:raw><code>node packages/cli/dist/main.js append trust.offered  '{"capability":"witness_tasks","level":2}'
+node packages/cli/dist/main.js append trust.accepted '{"capability":"witness_tasks"}'</code></pre>
+
+  <h2>Supabase backend</h2>
+  <p>Apply <code>supabase/migrations/0001_init.sql</code> to your project, then:</p>
+<pre><code>export SUPABASE_URL=… SUPABASE_KEY=&lt;anon key&gt; SUPABASE_ACCESS_TOKEN=&lt;owner JWT&gt;
+node packages/cli/dist/main.js config --backend supabase
+node packages/cli/dist/main.js create --name kai --owner &lt;auth user uuid&gt;</code></pre>
+  <p>The migration enables row-level security on every table, makes events append-only with a trigger, and routes all writes through a function that rejects gaps and duplicates atomically.</p>
+
+  <h2>Demo souls</h2>
+<pre><code>bash scripts/seed-demo.sh</code></pre>
+  <p>Creates three souls under <code>~/.soulsociety-demo</code>: atlas, a level-2 companion with trusted capabilities; sprout, brand new; ember, with a broken commitment, a demoted capability and a revoked device.</p>
+
+  <p class="muted">Full API notes live in the package READMEs in the repository.</p>
+</Base>

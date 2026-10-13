@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import CycleDiagram from '../components/CycleDiagram.astro';
+
+const title = 'Zero-knowledge souls for AI harnesses';
+const description =
+  'soulsociety gives an AI companion a portable, encrypted, append-only soul that any MCP harness can read and learn into, gated by the trust the soul itself records. The host never sees plaintext.';
+---
+
+<Base title={title} description={description} path="/">
+  <h1>Your AI assistant should remember you. Nobody else should be able to read what it remembers.</h1>
+  <p class="lead">
+    soulsociety gives your assistant a <strong>soul</strong>: a private notebook about you that it reads at the start of every chat and adds to as you talk. The notebook is yours, it moves with you between assistants, and the company storing a copy cannot open it.
+  </p>
+  <p>
+    <a class="cta" href="/in-plain-words">Start here, no jargon</a>
+    <a class="cta secondary" href="/features" style="margin-left:0.5rem">Everything it does</a>
+    <a class="cta secondary" href="/docs" style="margin-left:0.5rem">Set it up</a>
+  </p>
+
+  <h2>In one minute</h2>
+  <div class="grid">
+    <div class="card"><h3>It remembers</h3><p>Preferences, promises, finished work. Written down once, remembered every time, on every device.</p></div>
+    <div class="card"><h3>It can't be read by others</h3><p>Locked before it leaves your computer. The storage service, a hacker, or a court gets locked pages and no key.</p></div>
+    <div class="card"><h3>It earns trust</h3><p>At first it may only take notes. Permissions to do more are offered as it proves itself, and you accept them. Two mistakes and they are taken back.</p></div>
+  </div>
+
+  <h2 id="cycle">The MCP cycle</h2>
+  <p>Every session runs the same seven-step loop. The site is organised around it.</p>
+  <CycleDiagram />
+
+  <div class="grid">
+    <div class="card"><h3><a href="/how-it-works#brief">1. Brief</a></h3><p>A session-start hook replays the soul and puts a short brief in the model's context before the first prompt.</p></div>
+    <div class="card"><h3><a href="/how-it-works#read">2. Read</a></h3><p>The harness loads the <code>soul-companion</code> skill and calls <code>soul_state</code>. Observations become standing preferences.</p></div>
+    <div class="card"><h3><a href="/how-it-works#learn">3. Learn</a></h3><p>Durable facts about the user are recorded with <code>soul_observe</code>. Repeats raise confidence; only a human can retract.</p></div>
+    <div class="card"><h3><a href="/how-it-works#gate">4. Gate</a></h3><p>Every write passes four gates: grant scope, the soul's own trust ladder, the event schema, and append-only sequencing.</p></div>
+    <div class="card"><h3><a href="/how-it-works#witness">5. Witness</a></h3><p>XP comes only from task completions the harness actually saw, and only if the soul has offered that capability.</p></div>
+    <div class="card"><h3><a href="/how-it-works#sync">6. Sync</a></h3><p>Events are encrypted on the device and pushed as ciphertext. Peers pull, decrypt and replay to the same hash.</p></div>
+    <div class="card"><h3><a href="/how-it-works#grow">7. Grow</a></h3><p>Level-ups offer capabilities. The human accepts outside the harness. Two failures demote. Then the loop runs again.</p></div>
+  </div>
+
+  <h2>Why it is built this way</h2>
+  <div class="grid">
+    <div class="card"><h3>User-owned</h3><p>The soul is a folder of append-only logs plus a passphrase-protected key. Copy it, sync it, leave any vendor. Models are swappable because this isn't.</p></div>
+    <div class="card"><h3>Zero-knowledge host</h3><p>The host stores ciphertext, wrapped keys and sequence numbers. A compromised host, a rogue admin or a subpoena yields nothing readable. <a href="/security">Threat model</a>.</p></div>
+    <div class="card"><h3>Deterministic replay</h3><p>State is never stored, only derived. Every device replays the same ordered events to the same state and the same hash, forever.</p></div>
+    <div class="card"><h3>Earned autonomy</h3><p>A harness cannot grant itself anything. Capabilities are offered on level-up, accepted by the human, and revoked after two failures.</p></div>
+  </div>
+
+  <h2>In one terminal</h2>
+<pre is:raw><code>soul-sync create --name kai          # prints a recovery code once
+soul-sync grant claude-code          # mint a scoped harness token
+claude mcp add soul -e SOULSOCIETY_DEVICE_PASSPHRASE=… -- node packages/mcp/dist/main.js</code></pre>
+  <p class="muted">Then start a session. The brief is already in context.</p>
+</Base>

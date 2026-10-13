@@ -1,0 +1,31 @@
+{
+  "name": "@soulsociety/gateway",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/app.js",
+  "types": "./dist/app.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/app.d.ts",
+      "import": "./dist/app.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
+    }
+  },
+  "bin": {
+    "soul-gateway": "./dist/node.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "vitest run",
+    "start": "node dist/node.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "@soulsociety/core": "0.1.0",
+    "hono": "^4.6.0"
+  }
+}

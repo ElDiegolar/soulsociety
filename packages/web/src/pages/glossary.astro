@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'Glossary';
+const description = 'Every term used on this site explained in one or two plain sentences: soul, harness, MCP, event, replay, trust ladder, grant, device, data key, recovery code, host, gateway, snapshot, and more.';
+
+const terms: [string, string][] = [
+  ['Soul', 'Your private notebook: an append-only record of your preferences, promises and finished work that an AI assistant can read and add to.'],
+  ['Harness', 'The program that runs an AI assistant and gives it tools. Claude Code is one. The harness is what connects to your soul.'],
+  ['MCP', 'Model Context Protocol. A standard way for an assistant to talk to tools and data sources. soulsociety speaks it so any compatible assistant can use your soul.'],
+  ['Event', 'One line in the notebook. It has a date, a kind (such as "task completed" or "observation") and some details. Events are only ever added, never changed.'],
+  ['Replay', 'Reading the whole notebook from the start to work out the current picture: level, preferences, open promises. It is recalculated every time, so every device agrees.'],
+  ['Replay hash', 'A fingerprint of the entire history. If two devices have the same fingerprint, they have exactly the same notebook.'],
+  ['Observation', 'Something the assistant learned about you, with a confidence score. Repeats make it more confident. Only you can strike one out.'],
+  ['Witnessed', 'The assistant actually saw a task finish: tests passed, a command succeeded, a file appeared. Saying "done" is not a witness.'],
+  ['XP and level', 'Points for witnessed work and approved drafts. Levels rise with points. Nothing about app usage counts.'],
+  ['Trust ladder', 'The list of permissions the assistant has been offered, accepted, or lost. Offered on level-up, accepted by you, lost after two failures.'],
+  ['Capability', 'One rung of the ladder, such as "witness tasks" or "approve drafts". Each unlocks specific kinds of events the assistant may write.'],
+  ['Grant', 'A token you give an assistant so it can connect, with limited permissions and an expiry. You can revoke it any time. Only a fingerprint of it is stored.'],
+  ['Scope', 'What a grant allows: read events, add events, read state, read or write snapshots.'],
+  ['Device', 'A phone or computer that holds a copy of your notebook and its own key. You approve each one once and can revoke it later.'],
+  ['Owner passphrase', 'Your master secret. Never stored or sent anywhere. Used to approve devices and to revoke them.'],
+  ['Recovery code', 'A 26-character code shown once when you create your soul. It gets you back in if you forget the passphrase. Lose both and the notebook is locked forever.'],
+  ['Data key', 'The key that locks every page before it leaves your device. It is handed to each approved device in a sealed envelope only that device can open.'],
+  ['Key rotation', 'Making a fresh data key after a device is revoked, so the removed device cannot read anything new.'],
+  ['Host', 'The storage service that keeps locked copies so your devices stay in step. It never has a key. It can be a single file on your computer or a Supabase project.'],
+  ['Zero-knowledge', 'The host stores your data without being able to read it. Not a promise, a property of the design.'],
+  ['Gateway', 'A relay that lets an assistant running somewhere else connect to the host as if it were one of your devices, passing only locked pages.'],
+  ['Snapshot', 'An encrypted checkpoint of the current picture so a device can start quickly. It is checked against a fresh replay and thrown away if it disagrees.'],
+  ['Skill', 'A rulebook file the harness loads that tells the assistant how to behave with your soul.'],
+  ['Session-start brief', 'A short summary of your soul placed in the assistant\'s context before you type your first message.'],
+  ['Append-only', 'New lines only. No edits, no deletions, enforced on your device and again on the host.'],
+  ['Sequence number', 'The line number each device gives its events. The host accepts only the next number, so nothing can be slipped in or dropped.'],
+];
+---
+
+<Base title={title} description={description} path="/glossary">
+  <h1>Glossary</h1>
+  <p class="lead">Every word we use, in one or two sentences each.</p>
+  <dl>
+    {terms.map(([t, d]) => (
+      <>
+        <dt style="font-weight:700;margin-top:1rem">{t}</dt>
+        <dd style="margin:0.2rem 0 0">{d}</dd>
+      </>
+    ))}
+  </dl>
+</Base>

@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'In plain words';
+const description =
+  'soulsociety explained without jargon: a private notebook about you that your AI assistant reads at the start of every chat, writes into only with your permission, and that nobody else can open, not even the company storing it.';
+---
+
+<Base title={title} description={description} path="/in-plain-words" ogType="article">
+  <h1>soulsociety, in plain words</h1>
+  <p class="lead">If you have ever wished your AI assistant remembered you properly, and worried about who else could read what it remembers, this page is for you. No technical background needed.</p>
+
+  <h2>The problem</h2>
+  <p>Every time you open a chat with an AI assistant, it starts from zero. It does not know that you like short answers, that you promised your sister you would call on Sunday, or that you finished the big report yesterday. If you want it to remember, you have to tell it again. And if it does remember, that memory usually lives on the AI company's computers, where their staff could read it.</p>
+
+  <h2>The idea</h2>
+  <p>Give the assistant a <strong>soul</strong>: a small private notebook about you. The notebook is yours. It lives on your own computer and phone. Any assistant you choose can read it at the start of a chat and add to it as you talk. If you switch to a different assistant next year, the notebook comes with you.</p>
+
+  <h2>Three promises</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>1. Nobody else can read it</h3>
+      <p>Before the notebook leaves your computer it is locked with a key that only your devices have. The company that stores a copy for you, so your phone and laptop stay in step, only ever holds locked pages. They cannot open them. Neither can a hacker who breaks in, nor a court that asks.</p>
+    </div>
+    <div class="card">
+      <h3>2. Nothing can be erased or rewritten</h3>
+      <p>The notebook only grows. New lines are added at the end, never scribbled over. So the assistant cannot quietly change what it remembers about you, and you can always see the full history.</p>
+    </div>
+    <div class="card">
+      <h3>3. The assistant earns trust, it is not given it</h3>
+      <p>At first the assistant may only jot down notes and things it learns about you. It may not mark your tasks as done or approve anything on your behalf. Those permissions are offered as it proves itself, and you accept them yourself. If it gets something wrong twice, the permission is taken away.</p>
+    </div>
+  </div>
+
+  <h2>What a chat looks like</h2>
+  <ol>
+    <li><strong>You open a chat.</strong> Before you type anything, the assistant has already read a one-paragraph summary of your notebook: who you are, what you prefer, what you have promised.</li>
+    <li><strong>You talk as normal.</strong> If you mention a lasting preference, the assistant writes it down. "Prefers answers under 200 words." Say it again another day and it becomes more confident.</li>
+    <li><strong>You get things done.</strong> If the assistant actually sees you finish something, and you have allowed it to, it records that. Your notebook has a level that rises with real work, not with how often you open the app.</li>
+    <li><strong>Everything syncs.</strong> The new lines are locked and sent to the storage service. Your other devices fetch them, unlock them, and end up with exactly the same notebook.</li>
+    <li><strong>Next time, it remembers.</strong></li>
+  </ol>
+
+  <h2>What it will never do</h2>
+  <ul>
+    <li>Record your passwords, bank details or health information unless you ask it to.</li>
+    <li>Count how often you open the app, how long you stay, or your "streak". Those numbers are refused outright.</li>
+    <li>Mark something as done because you said so. It has to have seen it happen.</li>
+    <li>Delete or edit what it wrote earlier. Only you can strike a line out.</li>
+    <li>Give itself more permission. Only you can do that.</li>
+  </ul>
+
+  <h2>The one thing you must keep safe</h2>
+  <p>When you create your notebook you choose a passphrase and are shown a <strong>recovery code</strong> once. Write the code down somewhere safe. If you lose the passphrase, the code gets you back in. If you lose both, nobody can open the notebook again, including us. That is the price of a lock nobody else has a key to.</p>
+
+  <h2>Who is it for</h2>
+  <p>Anyone who uses an AI assistant for real work and wants it to know them without handing their life to a company. It was built first for people who find it hard to start tasks and benefit from an assistant that has something riding on their word, which is why it tracks promises and finished work rather than chat volume.</p>
+
+  <p><a class="cta" href="/features">See everything it does</a> <a class="cta secondary" href="/how-it-works" style="margin-left:0.5rem">See how a chat flows</a></p>
+</Base>

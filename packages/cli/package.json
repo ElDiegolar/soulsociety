@@ -1,0 +1,16 @@
+{
+  "name": "@soulsociety/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "soul-sync": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@soulsociety/core": "0.1.0",
+    "commander": "^13.0.0"
+  }
+}

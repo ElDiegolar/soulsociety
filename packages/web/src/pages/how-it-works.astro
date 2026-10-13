@@ -1,0 +1,103 @@
+---
+import Base from '../layouts/Base.astro';
+import CycleDiagram from '../components/CycleDiagram.astro';
+
+const title = 'How the MCP cycle works';
+const description =
+  'The seven steps a soulsociety soul goes through every session: brief, read, learn, gate, witness, sync, grow. What happens on the device, what crosses to the host, and what a harness can and cannot write.';
+
+const howTo = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'The soulsociety MCP cycle',
+  description,
+  step: [
+    ['Brief', 'A SessionStart hook replays the soul and injects a compact brief into the model context.'],
+    ['Read', 'The harness loads the soul-companion skill and calls soul_state; observations become standing preferences.'],
+    ['Learn', 'Durable preferences, patterns, facts, goals and dislikes are recorded with soul_observe.'],
+    ['Gate', 'Each write passes grant scope, the trust ladder recorded in the soul, the event schema, and append-only sequencing.'],
+    ['Witness', 'Task completions the harness saw, and is trusted to witness, become XP.'],
+    ['Sync', 'Events are encrypted on the device with the data key and pushed to the host as ciphertext; peers pull, decrypt and replay.'],
+    ['Grow', 'Level-ups offer capabilities; the human accepts them outside the harness; two failures demote.'],
+  ].map(([name, text], i) => ({ '@type': 'HowToStep', position: i + 1, name, text })),
+};
+---
+
+<Base title={title} description={description} path="/how-it-works" jsonLd={[howTo]} ogType="article">
+  <h1>How the MCP cycle works</h1>
+  <p class="lead">One session, seven steps. Six of them never leave the device. The seventh crosses to the host as ciphertext and comes back as the same state on every other device.</p>
+
+  <CycleDiagram />
+
+  <section id="brief">
+    <div class="step"><div class="n">1</div><div>
+      <h2 style="margin-top:0">Brief</h2>
+      <p>When a Claude Code session starts, a <code>SessionStart</code> hook runs <code>soul-brief.sh</code>. It replays the soul locally and prints a short brief as hook output: name, level, trust, due commitments, and the strongest observations. The model has this in context before the first prompt, so nothing has to be asked for.</p>
+      <p>The MCP server also ships its own instructions, so a harness without the hook still knows to read the soul first.</p>
+    </div></div>
+  </section>
+
+  <section id="read">
+    <div class="step"><div class="n">2</div><div>
+      <h2 style="margin-top:0">Read</h2>
+      <p>The harness loads the <code>soul-companion</code> skill, which is the hardened rulebook, then calls <code>soul_state</code>. The response is derived state: XP, level, trust per capability, commitments, observations, and <code>allowedAppendTypes</code>, the exact list of event types this harness may write right now.</p>
+      <p>Observations are followed without being recited. A due commitment is mentioned at most once.</p>
+    </div></div>
+  </section>
+
+  <section id="learn">
+    <div class="step"><div class="n">3</div><div>
+      <h2 style="margin-top:0">Learn</h2>
+      <p>This is the only "training" there is. When the user states a durable preference, a recurring pattern, a goal, a dislike or a fact about their setup, the harness records it with <code>soul_observe</code>. Replay dedups by text and raises confidence on repeats. The list is bounded, the weakest entries fall off, and only a human can retract through the CLI.</p>
+      <p>What is never recorded: secrets, health or financial details unless asked, transient moods, and anything about engagement with the tool. The schema refuses engagement inputs outright.</p>
+    </div></div>
+  </section>
+
+  <section id="gate">
+    <div class="step"><div class="n">4</div><div>
+      <h2 style="margin-top:0">Gate</h2>
+      <p>Every write from a harness passes four checks inside <code>soul-mcp</code>, on the device, where a harness cannot reach the code or the keys.</p>
+      <div class="table-wrap"><table class="stack">
+        <thead><tr><th>Gate</th><th>Question</th><th>Who sets it</th></tr></thead>
+        <tbody>
+          <tr><td data-label="Gate">Scope</td><td data-label="Question">Does this harness's grant include <code>events:append</code>?</td><td data-label="Who sets it">Owner, when minting the token</td></tr>
+          <tr><td data-label="Gate">Trust ladder</td><td data-label="Question">Is this event type permitted at the capabilities the soul has accepted?</td><td data-label="Who sets it">The soul's own history</td></tr>
+          <tr><td data-label="Gate">Schema</td><td data-label="Question">Is the event well-formed, versioned, and free of forbidden inputs?</td><td data-label="Who sets it">The code, forever</td></tr>
+          <tr><td data-label="Gate">Sequence</td><td data-label="Question">Is it the next sequence number for this device, with no gap?</td><td data-label="Who sets it">Local log, then the host again</td></tr>
+        </tbody>
+      </table></div>
+      <p>Notes and observations are always allowed. Task completion, draft approval and commitment resolution are not, until offered and accepted.</p>
+    </div></div>
+  </section>
+
+  <section id="witness">
+    <div class="step"><div class="n">5</div><div>
+      <h2 style="margin-top:0">Witness</h2>
+      <p>The soul grows only from witnessed real-task completion and approved drafts. <code>witnessed: true</code> means the harness saw it happen: tests passed, the command exited zero, the file exists. The user saying it is done is not a witness. Nothing about streaks, time in app, or opens can ever reach the state.</p>
+    </div></div>
+  </section>
+
+  <section id="sync">
+    <div class="step"><div class="n">6</div><div>
+      <h2 style="margin-top:0">Sync</h2>
+      <p>Each device keeps its own append-only JSONL log. On push, every pending entry is encrypted with the soul's versioned data key, with additional authenticated data binding it to its soul, device, sequence number and key version. The host stores the ciphertext and enforces one rule: the next sequence number, or nothing. Moving, re-tagging or replaying an event fails authentication.</p>
+      <p>On pull, a device fetches every peer's new entries, decrypts, verifies, and appends to its peer logs. Replay orders everything by timestamp, device and sequence, and two devices with the same logs always reach the same <code>replayHash</code>.</p>
+    </div></div>
+  </section>
+
+  <section id="grow">
+    <div class="step"><div class="n">7</div><div>
+      <h2 style="margin-top:0">Grow</h2>
+      <p>Reaching a level offers a capability. The human accepts it through their own body or the CLI, never through the harness. A harness that fails an accepted capability twice is demoted to approval-required. Next session, the brief reflects the new ladder, and the loop runs again.</p>
+    </div></div>
+  </section>
+
+  <h2>What crosses the boundary</h2>
+  <div class="table-wrap"><table class="stack">
+    <thead><tr><th>Stays on the device</th><th>Goes to the host</th></tr></thead>
+    <tbody>
+      <tr><td>Plaintext logs, passphrase, device private key, unwrapped data keys, derived state</td><td>Ciphertext events, nonces, sequence numbers, key version, wrapped keys, device public keys, labels, timestamps</td></tr>
+    </tbody>
+  </table></div>
+  <p>Read the <a href="/security">security model</a> for the full list of what the host can and cannot learn.</p>
+</Base>

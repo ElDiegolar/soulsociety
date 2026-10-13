@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'Security model';
+const description =
+  'What soulsociety protects against, what it does not, and exactly what the host stores: ciphertext, wrapped keys and sequence numbers, never a passphrase, recovery code or plaintext event.';
+---
+
+<Base title={title} description={description} path="/security" ogType="article">
+  <h1>Security model</h1>
+  <p class="lead">Plain statements, not promises. Everything here is enforced by code in the open-source repository and covered by tests against a real Postgres.</p>
+
+  <h2>Threat model</h2>
+  <h3>Protected against</h3>
+  <ul>
+    <li>Host compromise, a rogue administrator, or a subpoena of the host: all content is ciphertext at rest and in transit.</li>
+    <li>Token theft by a harness: grants are scoped, revocable, and append-only by default. A harness cannot delete or rewrite history.</li>
+    <li>A lost or stolen device: revoking it rotates the data key. It can read history it already had, and nothing after.</li>
+    <li>Event tampering by the host: every ciphertext is bound to its soul, device, sequence and key version. Moving or re-tagging an event fails authentication.</li>
+    <li>Forged snapshots: snapshots carry the replay hash and are verified against a local replay before use.</li>
+  </ul>
+  <h3>Not protected against</h3>
+  <ul>
+    <li>A compromised client with an unlocked key.</li>
+    <li>A user who loses both the passphrase and the recovery code. The soul is ciphertext forever.</li>
+    <li>Metadata: the host sees sizes, timestamps, device count and activity timing.</li>
+  </ul>
+
+  <h2>Keys</h2>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Key</th><th>Derived from</th><th>Where it lives</th></tr></thead>
+    <tbody>
+      <tr><td>Root key</td><td>Argon2id over the owner passphrase and a salt</td><td>Memory only, never stored or sent</td></tr>
+      <tr><td>Data key, versioned</td><td>32 random bytes per soul</td><td>Wrapped by the root key and the recovery key on the host; sealed to each approved device</td></tr>
+      <tr><td>Device keypair</td><td>X25519</td><td>Private key in a passphrase-encrypted file with mode 0600, or an OS keystore</td></tr>
+      <tr><td>Recovery key</td><td>Argon2id over a 26-character recovery code</td><td>Shown once at creation, never stored</td></tr>
+    </tbody>
+  </table></div>
+  <p>Payloads use XChaCha20-Poly1305 with authenticated additional data. Every primitive comes from libsodium. Nothing is custom.</p>
+
+  <h2>What we store about you</h2>
+  <h3>On the host, ciphertext only</h3>
+  <ul>
+    <li>An owner id, a neutral soul label, device labels and public keys.</li>
+    <li>Wrapped and sealed data keys.</li>
+    <li>Encrypted events with nonce, sequence number and key version.</li>
+    <li>Encrypted snapshots with their replay hash.</li>
+    <li>Hashed harness tokens with scopes and expiry.</li>
+  </ul>
+  <h3>Never stored anywhere</h3>
+  <ul>
+    <li>Owner passphrase, recovery code, root key, raw harness tokens.</li>
+  </ul>
+  <h3>On your device, in plaintext</h3>
+  <ul>
+    <li>The event log: task titles, notes, commitments, trust events and observations about preferences, patterns, facts, goals and dislikes with confidence and source.</li>
+  </ul>
+  <h3>Refused at write time</h3>
+  <ul>
+    <li>Engagement, session minutes, streaks, opens, time in app. The schema rejects them and the state cannot be influenced by them.</li>
+  </ul>
+
+  <h2>Remote access modes</h2>
+  <p><strong>Zero-knowledge relay</strong> is the default. A hosted harness is enrolled as a device and the gateway forwards ciphertext only. <strong>Custodial sessions</strong> are an explicit opt-in for thin clients: a trusted device hands the gateway a data key sealed to an ephemeral keypair with a 24-hour cap, held in memory. During that window the gateway operator can read the soul, and the product says so in those words.</p>
+
+  <h2>Verification</h2>
+  <p>The repository ships unit tests for the crypto, replay and client flows, gateway tests for isolation and rate limits, and an integration suite that applies the real migration to Postgres and checks row-level security, append-only triggers, gap and duplicate rejection, and that the owner cannot read grants by token hash without the service role.</p>
+</Base>

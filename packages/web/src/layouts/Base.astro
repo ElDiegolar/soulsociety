@@ -1,0 +1,204 @@
+---
+/**
+ * Base layout: every SEO primitive lives here so pages only supply title/description/structured data.
+ * Zero client-side JavaScript. Styles are inlined at build (see astro.config).
+ */
+interface Props {
+  title: string;
+  description: string;
+  /** Path for canonical/OG, e.g. "/how-it-works". Defaults to the current URL path. */
+  path?: string;
+  /** Extra JSON-LD objects for this page (Organization + WebSite are added on every page). */
+  jsonLd?: Record<string, unknown>[];
+  ogType?: 'website' | 'article';
+}
+
+const { title, description, path, jsonLd = [], ogType = 'website' } = Astro.props;
+const site = Astro.site ?? new URL('https://soulsociety.dev');
+const pagePath = path ?? Astro.url.pathname;
+const canonical = new URL(pagePath === '/' ? '/' : pagePath.replace(/\/$/, ''), site).toString();
+const ogImage = new URL('/og.svg', site).toString();
+const fullTitle = pagePath === '/' ? `${title} · soulsociety` : `${title} · soulsociety`;
+
+const baseLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'soulsociety',
+    url: site.toString(),
+    logo: new URL('/favicon.svg', site).toString(),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'soulsociety',
+    url: site.toString(),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'soulsociety',
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Linux, macOS, Windows (WSL)',
+    description:
+      'Zero-knowledge hosting and sync for AI companion souls: an encrypted, append-only record of a person that any MCP harness can read and learn into, under the trust the soul itself records.',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    license: 'https://opensource.org/licenses/MIT',
+  },
+];
+
+const nav = [
+  { href: '/in-plain-words', label: 'Start here' },
+  { href: '/how-it-works', label: 'How it works' },
+  { href: '/features', label: 'Everything it does' },
+  { href: '/security', label: 'Security' },
+  { href: '/docs', label: 'Set it up' },
+  { href: '/faq', label: 'FAQ' },
+  { href: '/glossary', label: 'Glossary' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)" />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="soulsociety" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content="soulsociety: the MCP cycle diagram" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {[...baseLd, ...jsonLd].map((ld) => <script type="application/ld+json" set:html={JSON.stringify(ld)} />)}
+
+    <style is:global>
+      :root {
+        --bg: #fbfaf7;
+        --fg: #1b1d22;
+        --muted: #5b6069;
+        --line: #e4e1da;
+        --accent: #1f6f5f;
+        --accent-ink: #ffffff;
+        --card: #ffffff;
+        --code: #f1efe9;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        --sans: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, sans-serif;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0f1115;
+          --fg: #e8e6e1;
+          --muted: #9aa0aa;
+          --line: #262a33;
+          --accent: #5fc3a9;
+          --accent-ink: #0f1115;
+          --card: #161a21;
+          --code: #1b2029;
+        }
+      }
+      * { box-sizing: border-box; }
+      html { font-family: var(--sans); background: var(--bg); color: var(--fg); line-height: 1.6; font-size: 112.5%; -webkit-text-size-adjust: 100%; }
+      body { margin: 0; }
+      a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+      a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .wrap { max-width: 68rem; margin: 0 auto; padding: 0 1rem; }
+      header.site { border-bottom: 1px solid var(--line); }
+      header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.5rem; flex-wrap: wrap; }
+      .brand { font-weight: 700; letter-spacing: 0.01em; text-decoration: none; color: var(--fg); font-size: 1.05rem; }
+      .brand b { color: var(--accent); }
+      nav.primary ul { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; }
+      nav.primary a { color: var(--fg); text-decoration: none; font-size: 0.95rem; }
+      nav.primary a:hover, nav.primary a[aria-current='page'] { color: var(--accent); text-decoration: underline; }
+      main { padding: 2.5rem 0 4rem; }
+      h1 { font-size: clamp(1.9rem, 4vw, 2.75rem); line-height: 1.15; margin: 0 0 0.75rem; letter-spacing: -0.01em; }
+      h2 { font-size: 1.5rem; margin: 2.5rem 0 0.75rem; }
+      h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
+      p.lead { font-size: 1.15rem; color: var(--muted); max-width: 46rem; margin: 0 0 1.5rem; }
+      .cta { display: inline-block; background: var(--accent); color: var(--accent-ink); padding: 0.65rem 1.1rem; border-radius: 0.5rem; text-decoration: none; font-weight: 600; }
+      .cta.secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: 0.75rem; padding: 1.1rem 1.2rem; }
+      .card h3 { margin-top: 0; }
+      .step { display: grid; grid-template-columns: 2.5rem 1fr; gap: 0.75rem; align-items: start; margin: 1.25rem 0; }
+      .step > div { min-width: 0; }
+      .step .n { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 700; }
+      pre, code { font-family: var(--mono); font-size: 0.9em; }
+      pre { background: var(--code); border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.9rem 1rem; overflow-x: auto; }
+      code:not(pre code) { background: var(--code); padding: 0.1em 0.35em; border-radius: 0.3em; }
+      table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.95rem; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      /* stacked tables on narrow screens: each row becomes a card, headers become labels */
+      @media (max-width: 640px) {
+        table.stack, table.stack tbody, table.stack tr, table.stack td { display: block; width: 100%; }
+        table.stack thead { display: none; }
+        table.stack tr { border: 1px solid var(--line); border-radius: 0.6rem; padding: 0.6rem 0.8rem; margin: 0.75rem 0; background: var(--card); }
+        table.stack td { border: 0; padding: 0.25rem 0; }
+        table.stack td::before { content: attr(data-label); display: block; font-size: 0.8rem; color: var(--muted); }
+        table.stack td:first-child::before { display: none; }
+        pre { font-size: 0.8rem; }
+        nav.primary a { font-size: 1rem; padding: 0.25rem 0; display: inline-block; }
+      }
+      th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 0.5rem 0.6rem; vertical-align: top; }
+      th { color: var(--muted); font-weight: 600; }
+      figure { margin: 2rem 0; }
+      figure svg { width: 100%; height: auto; display: block; }
+      figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.5rem; }
+      footer.site { border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; padding: 1.5rem 0 2.5rem; }
+      footer.site ul { list-style: none; padding: 0; margin: 0.5rem 0 0; display: flex; gap: 1rem; flex-wrap: wrap; }
+      .muted { color: var(--muted); }
+      details { border: 1px solid var(--line); border-radius: 0.5rem; padding: 0.6rem 0.9rem; margin: 0.6rem 0; background: var(--card); }
+      summary { cursor: pointer; font-weight: 600; }
+      .skip { position: absolute; left: -999px; }
+      .skip:focus { left: 1rem; top: 1rem; background: var(--card); padding: 0.5rem; z-index: 10; }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site">
+      <div class="wrap">
+        <a class="brand" href="/" aria-label="soulsociety home">soul<b>society</b></a>
+        <nav class="primary" aria-label="Primary">
+          <ul>
+            {nav.map((n) => (
+              <li><a href={n.href} aria-current={pagePath.startsWith(n.href) ? 'page' : undefined}>{n.label}</a></li>
+            ))}
+            <li><a href="https://github.com/ElDiegolar/soulsociety" rel="noopener">GitHub</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="wrap">
+      <slot />
+    </main>
+    <footer class="site">
+      <div class="wrap">
+        <div>soulsociety · zero-knowledge souls for AI harnesses · MIT licensed</div>
+        <ul>
+          <li><a href="/in-plain-words">Start here</a></li>
+          <li><a href="/how-it-works">How it works</a></li>
+          <li><a href="/features">Everything it does</a></li>
+          <li><a href="/security">Security</a></li>
+          <li><a href="/docs">Set it up</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/glossary">Glossary</a></li>
+        </ul>
+      </div>
+    </footer>
+  </body>
+</html>

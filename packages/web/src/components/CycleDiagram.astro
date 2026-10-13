@@ -1,0 +1,81 @@
+---
+/**
+ * The MCP cycle as an accessible inline SVG. Pure markup: no script, themes via currentColor + CSS vars.
+ * Seven steps around a loop, with the device/host boundary drawn as the one line ciphertext crosses.
+ */
+const steps = [
+  { id: 'brief', n: 1, title: 'Brief', sub: 'SessionStart hook replays the soul' },
+  { id: 'read', n: 2, title: 'Read', sub: 'harness loads skill, calls soul_state' },
+  { id: 'learn', n: 3, title: 'Learn', sub: 'soul_observe records preferences' },
+  { id: 'gate', n: 4, title: 'Gate', sub: 'scope · trust ladder · schema · seq' },
+  { id: 'witness', n: 5, title: 'Witness', sub: 'seen task completion → XP' },
+  { id: 'sync', n: 6, title: 'Sync', sub: 'encrypt on device, push ciphertext' },
+  { id: 'grow', n: 7, title: 'Grow', sub: 'level-up offers capability, human accepts' },
+];
+// positions around an ellipse, starting top-left going clockwise
+const cx = 480, cy = 215, rx = 370, ry = 125;
+const pos = steps.map((s, i) => {
+  const a = -Math.PI / 2 + (i / steps.length) * Math.PI * 2;
+  return { ...s, x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
+});
+---
+
+<figure aria-labelledby="cycle-title" role="group">
+  <svg viewBox="0 0 960 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cycle-title cycle-desc">
+    <title id="cycle-title">The soulsociety MCP cycle</title>
+    <desc id="cycle-desc">
+      A seven-step loop that runs every session: Brief, Read, Learn, Gate, Witness, Sync, Grow. Steps one to five and seven happen on the user's device where the keys live; step six crosses to the host as ciphertext only, and other devices pull, decrypt and replay to the same state.
+    </desc>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+      </marker>
+    </defs>
+
+    <!-- device boundary -->
+    <rect x="40" y="30" width="880" height="360" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" stroke-dasharray="6 6" />
+    <text x="60" y="56" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="system-ui, sans-serif">USER'S DEVICE · keys live here · plaintext log, 0600</text>
+
+    <!-- host boundary -->
+    <rect x="40" y="415" width="880" height="95" rx="18" fill="none" stroke="currentColor" stroke-opacity="0.25" />
+    <text x="60" y="442" font-size="14" fill="currentColor" fill-opacity="0.65" font-family="system-ui, sans-serif">HOST · ciphertext only · append-only · rejects gaps and duplicates · never holds a key</text>
+    <text x="60" y="488" font-size="13" fill="currentColor" fill-opacity="0.8" font-family="ui-monospace, monospace">heads · append(events) · since(vector) · snapshots   →   other devices pull → decrypt → replay → same replayHash</text>
+
+    <!-- the loop -->
+    <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="2" />
+    {pos.map((p, i) => {
+      const next = pos[(i + 1) % pos.length];
+      // arrow along the ellipse: draw a short chord near the midpoint
+      const a1 = -Math.PI / 2 + (i / pos.length) * Math.PI * 2 + 0.33;
+      const a2 = -Math.PI / 2 + (i / pos.length) * Math.PI * 2 + 0.52;
+      const x1 = cx + rx * Math.cos(a1), y1 = cy + ry * Math.sin(a1);
+      const x2 = cx + rx * Math.cos(a2), y2 = cy + ry * Math.sin(a2);
+      return <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" data-next={next.id} />;
+    })}
+
+    <!-- nodes -->
+    {pos.map((p) => (
+      <g transform={`translate(${p.x} ${p.y})`}>
+        <circle r="30" fill="var(--accent, #1f6f5f)" />
+        <text y="-4" text-anchor="middle" font-size="12" fill="var(--accent-ink, #fff)" font-family="system-ui, sans-serif">{p.n}</text>
+        <text y="12" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent-ink, #fff)" font-family="system-ui, sans-serif">{p.title}</text>
+        {(() => {
+          const side = Math.abs(p.x - cx) > rx * 0.55;
+          const x = side ? (p.x < cx ? 40 : -40) : 0; // side labels sit inside the loop
+          const y = side ? (p.y < cy ? 36 : 4) : p.y > cy ? -42 : 48; // upper side nodes: label below, inside
+          const anchor = side ? (p.x < cx ? 'start' : 'end') : 'middle';
+          return (
+            <text x={x} y={y} text-anchor={anchor} font-size="12" fill="currentColor" fill-opacity="0.8" font-family="system-ui, sans-serif">
+              {p.sub}
+            </text>
+          );
+        })()}
+      </g>
+    ))}
+
+    <!-- sync crosses the boundary -->
+    <line x1={pos[5]!.x} y1={pos[5]!.y + 34} x2={pos[5]!.x} y2="413" stroke="currentColor" stroke-width="2" marker-end="url(#arrow)" />
+    <text x={pos[5]!.x + 10} y="405" font-size="12" fill="currentColor" fill-opacity="0.8" font-family="ui-monospace, monospace">encrypt(DK, AAD = soul|device|seq|ver)</text>
+  </svg>
+  <figcaption id="cycle-caption">One session, seven steps. Everything but step six stays on the device; step six crosses to the host as ciphertext.</figcaption>
+</figure>

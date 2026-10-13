@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+
+const title = 'FAQ';
+const description = 'Common questions about soulsociety: what a soul is, what the host can see, how a harness earns trust, what happens if you lose your passphrase, and how it differs from a memory file.';
+
+const faqs: [string, string][] = [
+  ['What is a soul?', 'A portable, append-only record of a person: preferences, commitments, witnessed task completions and the trust they have extended to AI harnesses. State is never stored, only replayed from the log, so every device derives the same state and the same hash.'],
+  ['What can the host see?', 'Ciphertext, wrapped keys, device public keys, labels, sequence numbers and timestamps. It never holds a key, so a compromised host, a rogue admin or a subpoena yields nothing readable.'],
+  ['How is this different from a memory file?', 'A memory file is text a model edits. A soul is an event log a harness can only append to, through gates the soul itself defines, with every write encrypted on the device and replayable on any other. It cannot be silently rewritten, and it cannot be read by whoever hosts it.'],
+  ['Can a harness give itself more access?', 'No. Capabilities are offered by the soul on level-up and accepted by the human through their own body or the CLI. A harness can ask once per session. Two failures on an accepted capability demote it.'],
+  ['What counts as a witnessed task?', 'The harness saw it finish in the real world: tests passed, the command exited zero, the file exists, the message was sent. The user saying it is done does not count. Nothing about streaks or time in app can ever reach the state.'],
+  ['What if I lose my passphrase?', 'Use the recovery code shown once at creation. If you lose both, the soul is ciphertext forever. This is stated in those words because it is true.'],
+  ['What if a device is stolen?', 'Revoke it. The data key rotates and is re-sealed to the remaining devices. The stolen device can read history it already had and nothing after.'],
+  ['Does it need a server?', 'No. The file backend runs the whole thing on local disk, including multiple devices sharing one host file. Supabase is the hosted option; the schema and row-level security policies ship in the repository.'],
+  ['Which harnesses work?', 'Anything that speaks MCP over stdio. Claude Code is the reference, with a skill, a session-start brief hook and server instructions. The gateway lets a remote harness enrol as a device over HTTPS.'],
+  ['Is it open source?', 'Yes, MIT licensed. Crypto is libsodium only, nothing custom.'],
+];
+
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+};
+---
+
+<Base title={title} description={description} path="/faq" jsonLd={[faqLd]}>
+  <h1>Frequently asked questions</h1>
+  <p class="lead">Short answers. The <a href="/how-it-works">cycle</a> and the <a href="/security">security model</a> have the long ones.</p>
+  {faqs.map(([q, a]) => (
+    <details>
+      <summary>{q}</summary>
+      <p>{a}</p>
+    </details>
+  ))}
+</Base>
